@@ -5,7 +5,7 @@ const button = document.createElement("button");
 const message = document.createElement("p");
 
 button.addEventListener("click", () => {
-    message.innerHTML = "you clicked the button!";
-    app.append(message);
+  message.innerHTML = "you clicked the button!";
 });
 app.append(button);
+app.append(message);
