@@ -17,9 +17,10 @@ const map = leaflet.map(document.getElementById("map")!, {
   zoom: GAMEPLAY_ZOOM_LEVEL,
   minZoom: GAMEPLAY_ZOOM_LEVEL,
   maxZoom: GAMEPLAY_ZOOM_LEVEL,
-  zoomControl: true,
+  zoomControl: false,
   scrollWheelZoom: false,
 });
+
 
 // Populate map with OpenStreetMap tiles
 leaflet
@@ -63,8 +64,21 @@ function spawnCache(c: Cache) {
   const rect = leaflet.rectangle(bounds);
   rect.addTo(map);
 
+  // Add cache Markers to map
+  const greenIcon = new leaflet.Icon({
+    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
+  });
+  
+  const cacheMarker = leaflet.marker(bounds.getCenter(), {icon: greenIcon});
+  cacheMarker.addTo(map);
+  
   // Add popup to cache
-  rect.bindPopup(() => {
+  cacheMarker.bindPopup(() => {
     // Determinitically generate cache value
     c.coins = Math.floor(luck([c.cell.i, c.cell.j, "initialValue"].toString()) * 100);
 
@@ -72,13 +86,20 @@ function spawnCache(c: Cache) {
     const popupDiv = document.createElement("div");
     popupDiv.innerHTML = `
                 <div>There is a cache here at "${c.cell.i},${c.cell.j}". It has value <span id="value">${c.coins}</span>.</div>
-                <button id="collect">collect</button>`;
+                <button id="collect">collect</button> <button id="deposit">deposit</button>`;
 
     // add or remove coins from cache
     popupDiv
       .querySelector<HTMLButtonElement>("#collect")!
       .addEventListener("click", () => {
         CollectCoin(c);
+        popupDiv.querySelector<HTMLSpanElement>("#value")!.innerHTML =
+          c.coins.toString();
+      });
+      popupDiv
+      .querySelector<HTMLButtonElement>("#deposit")!
+      .addEventListener("click", () => {
+        DepositCoin(c);
         popupDiv.querySelector<HTMLSpanElement>("#value")!.innerHTML =
           c.coins.toString();
       });
@@ -90,6 +111,12 @@ function spawnCache(c: Cache) {
 function CollectCoin(cache: Cache){
   playerPoints ++;
   cache.coins --;
+  statusPanel.innerHTML = `${playerPoints} points accumulated`;
+}
+
+function DepositCoin(cache: Cache){
+  playerPoints --;
+  cache.coins ++;
   statusPanel.innerHTML = `${playerPoints} points accumulated`;
 }
 
