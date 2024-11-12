@@ -21,7 +21,6 @@ const map = leaflet.map(document.getElementById("map")!, {
   scrollWheelZoom: false,
 });
 
-
 // Populate map with OpenStreetMap tiles
 leaflet
   .tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -42,45 +41,55 @@ const statusPanel = document.querySelector<HTMLDivElement>("#statusPanel")!;
 statusPanel.innerHTML = "No points yet...";
 
 // Add caches to the map by cell numbers
-interface Cache{
+interface Cache {
   coins: number;
   cell: Cell;
 }
 
-interface Cell{
+interface Cell {
   i: number;
   j: number;
 }
-
 
 function spawnCache(c: Cache) {
   // Convert cell numbers into lat/lng bounds
   const origin = OAKES_CLASSROOM;
   const bounds = leaflet.latLngBounds([
-    [origin.lat + c.cell.i * TILE_DEGREES, origin.lng + c.cell.j * TILE_DEGREES],
-    [origin.lat + (c.cell.i + 1) * TILE_DEGREES, origin.lng + (c.cell.j + 1) * TILE_DEGREES],
+    [
+      origin.lat + c.cell.i * TILE_DEGREES,
+      origin.lng + c.cell.j * TILE_DEGREES,
+    ],
+    [
+      origin.lat + (c.cell.i + 1) * TILE_DEGREES,
+      origin.lng + (c.cell.j + 1) * TILE_DEGREES,
+    ],
   ]);
 
   const rect = leaflet.rectangle(bounds);
   rect.addTo(map);
 
   // Add cache Markers to map
+  // got code for changing marker color from https://stackoverflow.com/questions/23567203/leaflet-changing-marker-color
   const greenIcon = new leaflet.Icon({
-    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+    iconUrl:
+      "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png",
+    shadowUrl:
+      "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
     iconSize: [25, 41],
     iconAnchor: [12, 41],
     popupAnchor: [1, -34],
-    shadowSize: [41, 41]
+    shadowSize: [41, 41],
   });
-  
-  const cacheMarker = leaflet.marker(bounds.getCenter(), {icon: greenIcon});
+
+  const cacheMarker = leaflet.marker(bounds.getCenter(), { icon: greenIcon });
   cacheMarker.addTo(map);
-  
+
   // Add popup to cache
   cacheMarker.bindPopup(() => {
     // Determinitically generate cache value
-    c.coins = Math.floor(luck([c.cell.i, c.cell.j, "initialValue"].toString()) * 100);
+    c.coins = Math.floor(
+      luck([c.cell.i, c.cell.j, "initialValue"].toString()) * 100,
+    );
 
     // Allow player to collect/deposit coins from/to cache
     const popupDiv = document.createElement("div");
@@ -93,30 +102,30 @@ function spawnCache(c: Cache) {
       .querySelector<HTMLButtonElement>("#collect")!
       .addEventListener("click", () => {
         CollectCoin(c);
-        popupDiv.querySelector<HTMLSpanElement>("#value")!.innerHTML =
-          c.coins.toString();
+        popupDiv.querySelector<HTMLSpanElement>("#value")!.innerHTML = c.coins
+          .toString();
       });
-      popupDiv
+    popupDiv
       .querySelector<HTMLButtonElement>("#deposit")!
       .addEventListener("click", () => {
         DepositCoin(c);
-        popupDiv.querySelector<HTMLSpanElement>("#value")!.innerHTML =
-          c.coins.toString();
+        popupDiv.querySelector<HTMLSpanElement>("#value")!.innerHTML = c.coins
+          .toString();
       });
 
     return popupDiv;
   });
 }
 
-function CollectCoin(cache: Cache){
-  playerPoints ++;
-  cache.coins --;
+function CollectCoin(cache: Cache) {
+  playerPoints++;
+  cache.coins--;
   statusPanel.innerHTML = `${playerPoints} points accumulated`;
 }
 
-function DepositCoin(cache: Cache){
-  playerPoints --;
-  cache.coins ++;
+function DepositCoin(cache: Cache) {
+  playerPoints--;
+  cache.coins++;
   statusPanel.innerHTML = `${playerPoints} points accumulated`;
 }
 
@@ -124,7 +133,7 @@ function DepositCoin(cache: Cache){
 for (let i = -NEIGHBORHOOD_SIZE; i < NEIGHBORHOOD_SIZE; i++) {
   for (let j = -NEIGHBORHOOD_SIZE; j < NEIGHBORHOOD_SIZE; j++) {
     if (luck([i, j].toString()) < CACHE_SPAWN_PROBABILITY) {
-      spawnCache({ coins:0, cell:{i, j} });
+      spawnCache({ coins: 0, cell: { i, j } });
     }
   }
 }
