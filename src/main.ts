@@ -24,13 +24,13 @@ const knownCells: Map<string, Cache> = new Map();
 const board = new Board(10, 10);
 
 // center it on the oaks classroom location
-const OAKES_CLASSROOM_CELL: Cell = {i: 369894, j: -1220627};
+const OAKES_CLASSROOM_CELL: Cell = { i: 369894, j: -1220627 };
 const cellBounds = board.getCellBounds(OAKES_CLASSROOM_CELL);
 const centerLat = (cellBounds.getNorth() + cellBounds.getSouth()) / 2;
 const centerLng = (cellBounds.getEast() + cellBounds.getWest()) / 2;
 
 // Create the map (element with id "map" is defined in index.html)
-const map = leaflet.map(document.getElementById("map")!,{
+const map = leaflet.map(document.getElementById("map")!, {
   center: [centerLat, centerLng],
   zoom: GAMEPLAY_ZOOM_LEVEL,
   minZoom: GAMEPLAY_ZOOM_LEVEL,
@@ -59,12 +59,12 @@ const statusPanel = document.querySelector<HTMLDivElement>("#statusPanel")!; // 
 statusPanel.innerHTML = "No points yet...";
 
 // Add caches to the map by cell numbers
-interface Cell{
+interface Cell {
   readonly i: number;
   readonly j: number;
 }
 
-interface Cache{
+interface Cache {
   coins: number;
   cell: Cell;
 }
@@ -105,16 +105,16 @@ function spawnCache(c: Cache) {
       .addEventListener("click", () => {
         CollectCoin(c);
         popupDiv.querySelector<HTMLSpanElement>("#value")!.innerHTML = c.coins
-        .toString();
+          .toString();
       });
 
     return popupDiv;
   });
 }
 
-function CollectCoin(cache: Cache){
-  playerPoints ++;
-  cache.coins --;
+function CollectCoin(cache: Cache) {
+  playerPoints++;
+  cache.coins--;
   statusPanel.innerHTML = `${playerPoints} points accumulated`;
 }
 
