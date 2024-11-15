@@ -35,7 +35,6 @@ export class Board {
 
   getCellBounds(cell: Cell): leaflet.LatLngBounds {
     const { i, j } = cell;
-    
     //calculate the bounds of the cell
     const southLat = i * this.TILE_WIDTH;
     const westLng = j * this.TILE_WIDTH;

@@ -104,8 +104,8 @@ function spawnCache(c: Cache) {
       .querySelector<HTMLButtonElement>("#collect")!
       .addEventListener("click", () => {
         CollectCoin(c);
-        popupDiv.querySelector<HTMLSpanElement>("#value")!.innerHTML =
-          c.coins.toString();
+        popupDiv.querySelector<HTMLSpanElement>("#value")!.innerHTML = c.coins
+        .toString();
       });
 
     return popupDiv;
@@ -127,7 +127,3 @@ for (let i = -NEIGHBORHOOD_SIZE; i < NEIGHBORHOOD_SIZE; i++) {
     }
   }
 }
-
-
-
-
