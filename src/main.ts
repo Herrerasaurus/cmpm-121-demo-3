@@ -13,6 +13,7 @@ import luck from "./luck.ts";
 
 // board of grid cells
 import Board from "./board.ts";
+import { point } from "../node_modules/leaflet/dist/leaflet-src.js";
 
 const GAMEPLAY_ZOOM_LEVEL = 19;
 const TILE_DEGREES = 1e-4;
@@ -109,32 +110,32 @@ function spawnCache(i: number, j: number) {
     popupDiv
       .querySelector<HTMLButtonElement>("#collect")!
       .addEventListener("click", () => {
-        CollectCoin(coinArray);
-        popupDiv.querySelector<HTMLSpanElement>("#value")!.innerHTML = coinArray
-          .length
-          .toString();
+        CollectCoin(coinArray, pointValue);
+        popupDiv.querySelector<HTMLSpanElement>("#value")!.innerHTML =
+          pointValue.toString();
       });
 
     popupDiv
       .querySelector<HTMLButtonElement>("#deposit")!
       .addEventListener("click", () => {
-        DepositCoin(coinArray);
-        popupDiv.querySelector<HTMLSpanElement>("#value")!.innerHTML = coinArray
-          .length
-          .toString();
+        DepositCoin(coinArray, pointValue);
+        popupDiv.querySelector<HTMLSpanElement>("#value")!.innerHTML =
+          pointValue.toString();
       });
 
     return popupDiv;
   });
 }
 
-function CollectCoin(coinArray: Coin[]) {
+function CollectCoin(coinArray: Coin[], pointValue: number) {
   playerPoints++;
+  pointValue--;
   playerCoins.push(coinArray.pop()!);
   statusPanel.innerHTML = `${playerPoints} points accumulated`;
 }
-function DepositCoin(coinArray: Coin[]) {
+function DepositCoin(coinArray: Coin[], pointValue: number) {
   playerPoints--;
+  pointValue++;
   coinArray.push(playerCoins.pop()!);
   statusPanel.innerHTML = `${playerPoints} points accumulated`;
 }
