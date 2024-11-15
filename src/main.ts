@@ -110,18 +110,18 @@ function spawnCache(i: number, j: number) {
       .querySelector<HTMLButtonElement>("#collect")!
       .addEventListener("click", () => {
         CollectCoin(coinArray);
-        popupDiv.querySelector<HTMLSpanElement>("#value")!.innerHTML =
-          (coinArray.length)
-            .toString();
+        popupDiv.querySelector<HTMLSpanElement>("#value")!.innerHTML = coinArray
+          .length
+          .toString();
       });
 
     popupDiv
       .querySelector<HTMLButtonElement>("#deposit")!
       .addEventListener("click", () => {
         DepositCoin(coinArray);
-        popupDiv.querySelector<HTMLSpanElement>("#value")!.innerHTML =
-          (coinArray.length)
-            .toString();
+        popupDiv.querySelector<HTMLSpanElement>("#value")!.innerHTML = coinArray
+          .length
+          .toString();
       });
 
     return popupDiv;
@@ -138,7 +138,6 @@ function DepositCoin(coinArray: Coin[]) {
   coinArray.push(playerCoins.pop()!);
   statusPanel.innerHTML = `${playerPoints} points accumulated`;
 }
-
 
 // adding serial number identification to each coin
 interface Coin {
