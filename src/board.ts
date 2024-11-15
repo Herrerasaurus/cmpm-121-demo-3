@@ -6,21 +6,22 @@ interface Cell {
 }
 
 export class Board {
-  TILE_WIDTH = 10;
-  TILE_VISIBILITY_RADIUS = 10;
+  readonly TILE_WIDTH: number;
+  readonly TILE_VISIBILITY_RADIUS: number;
 
-  private readonly KNOWN_CELLS = new Map<string, Cell>();
+  private readonly KNOWN_CELLS: Map<string, Cell>;
 
   constructor(TILE_WIDTH: number, TILE_VISIBILITY_RADIUS: number) {
     this.TILE_WIDTH = TILE_WIDTH;
     this.TILE_VISIBILITY_RADIUS = TILE_VISIBILITY_RADIUS;
+    this.KNOWN_CELLS = new Map<string, Cell>();
   }
 
   private getCanonicalCell(cell: Cell): Cell {
     const { i, j } = cell;
     const key = [i, j].toString();
     if (!this.KNOWN_CELLS.has(key)) {
-      this.KNOWN_CELLS.set(key, { i, j });
+      this.KNOWN_CELLS.set(key, cell);
     }
     return this.KNOWN_CELLS.get(key)!;
   }
@@ -33,17 +34,18 @@ export class Board {
   }
 
   getCellBounds(cell: Cell): leaflet.LatLngBounds {
-    const origin = leaflet.latLng(0, 0);
-    return leaflet.latLngBounds([
-      [
-        origin.lat + cell.i * this.TILE_WIDTH,
-        origin.lng + cell.j * this.TILE_WIDTH,
-      ],
-      [
-        origin.lat + (cell.i + 1) * this.TILE_WIDTH,
-        origin.lng + (cell.j + 1) * this.TILE_WIDTH,
-      ],
-    ]);
+    const { i, j } = cell;
+    
+    //calculate the bounds of the cell
+    const southLat = i * this.TILE_WIDTH;
+    const westLng = j * this.TILE_WIDTH;
+    const northLat = (i + 1) * this.TILE_WIDTH;
+    const eastLng = (j + 1) * this.TILE_WIDTH;
+
+    return leaflet.latLngBounds(
+      leaflet.latLng(southLat, westLng),
+      leaflet.latLng(northLat, eastLng)
+    );
   }
 
   getCellsNearPoint(point: leaflet.LatLng): Cell[] {
