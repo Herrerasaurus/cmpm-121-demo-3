@@ -5,11 +5,6 @@ interface Cell {
   readonly j: number;
 }
 
-interface Coin {
-    readonly cell: Cell;
-    readonly serial: number;
-}
-
 export class Board {
   readonly TILE_WIDTH: number;
   readonly TILE_VISIBILITY_RADIUS: number;
