@@ -44,7 +44,7 @@ export class Board {
 
     return leaflet.latLngBounds(
       leaflet.latLng(southLat, westLng),
-      leaflet.latLng(northLat, eastLng)
+      leaflet.latLng(northLat, eastLng),
     );
   }
 
