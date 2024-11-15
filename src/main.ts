@@ -103,7 +103,7 @@ function spawnCache(i: number, j: number) {
     const popupDiv = document.createElement("div");
     popupDiv.innerHTML = `
                 <div>There is a cache here at "${cell.i}, ${cell.j}". It has value <span id="value">${pointValue}</span>.</div>
-                <button id="collect">collect</button>`;
+                <button id="collect">collect</button> <button id="deposit">collect</button>`;
 
     // Clicking the button decrements the cache's value and increments the player's points
     popupDiv
@@ -111,7 +111,16 @@ function spawnCache(i: number, j: number) {
       .addEventListener("click", () => {
         CollectCoin(coinArray);
         popupDiv.querySelector<HTMLSpanElement>("#value")!.innerHTML =
-          (pointValue - 1)
+          (coinArray.length)
+            .toString();
+      });
+
+    popupDiv
+      .querySelector<HTMLButtonElement>("#deposit")!
+      .addEventListener("click", () => {
+        DepositCoin(coinArray);
+        popupDiv.querySelector<HTMLSpanElement>("#value")!.innerHTML =
+          (coinArray.length)
             .toString();
       });
 
@@ -124,6 +133,12 @@ function CollectCoin(coinArray: Coin[]) {
   playerCoins.push(coinArray.pop()!);
   statusPanel.innerHTML = `${playerPoints} points accumulated`;
 }
+function DepositCoin(coinArray: Coin[]) {
+  playerPoints--;
+  coinArray.push(playerCoins.pop()!);
+  statusPanel.innerHTML = `${playerPoints} points accumulated`;
+}
+
 
 // adding serial number identification to each coin
 interface Coin {
