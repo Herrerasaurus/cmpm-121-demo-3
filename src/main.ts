@@ -93,7 +93,7 @@ function spawnCache(i: number, j: number) {
   rect.bindPopup(() => {
     // Each cache has a random point value, mutable by the player
     const coinArray: Coin[] = [];
-    const pointValue = Math.floor(
+    let pointValue = Math.floor(
       luck([i, j, "initialValue"].toString()) * 100,
     );
     for (let i = 0; i < pointValue; i++) {
@@ -110,32 +110,32 @@ function spawnCache(i: number, j: number) {
     popupDiv
       .querySelector<HTMLButtonElement>("#collect")!
       .addEventListener("click", () => {
-        CollectCoin(coinArray, pointValue);
-        popupDiv.querySelector<HTMLSpanElement>("#value")!.innerHTML =
-          pointValue.toString();
+        CollectCoin(coinArray);
+        pointValue--;
+        popupDiv.querySelector<HTMLSpanElement>("#value")!.innerHTML = pointValue
+          .toString();
       });
 
     popupDiv
       .querySelector<HTMLButtonElement>("#deposit")!
       .addEventListener("click", () => {
-        DepositCoin(coinArray, pointValue);
-        popupDiv.querySelector<HTMLSpanElement>("#value")!.innerHTML =
-          pointValue.toString();
+        DepositCoin(coinArray);
+        pointValue++;
+        popupDiv.querySelector<HTMLSpanElement>("#value")!.innerHTML = pointValue
+          .toString();
       });
 
     return popupDiv;
   });
 }
 
-function CollectCoin(coinArray: Coin[], pointValue: number) {
+function CollectCoin(coinArray: Coin[]) {
   playerPoints++;
-  pointValue--;
   playerCoins.push(coinArray.pop()!);
   statusPanel.innerHTML = `${playerPoints} points accumulated`;
 }
-function DepositCoin(coinArray: Coin[], pointValue: number) {
+function DepositCoin(coinArray: Coin[]) {
   playerPoints--;
-  pointValue++;
   coinArray.push(playerCoins.pop()!);
   statusPanel.innerHTML = `${playerPoints} points accumulated`;
 }
