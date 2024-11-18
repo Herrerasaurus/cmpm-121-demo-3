@@ -14,7 +14,6 @@ import luck from "./luck.ts";
 // board of grid cells
 import Board from "./board.ts";
 
-
 const GAMEPLAY_ZOOM_LEVEL = 19;
 const TILE_DEGREES = 1e-4;
 const NEIGHBORHOOD_SIZE = 8;
@@ -145,9 +144,12 @@ interface Coin {
   serial: number;
 }
 
-function generateCoins(location: {i: number, j: number}, serialNum: number): Coin {
+function generateCoins(
+  cell: { i: number; j: number },
+  serialNum: number,
+): Coin {
   return {
-    location: { i: location.i, j: location.j },
+    location: { i: cell.i, j: cell.j },
     serial: serialNum,
   };
 }
