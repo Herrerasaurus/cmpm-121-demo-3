@@ -58,6 +58,12 @@ let playerPoints = 0;
 const statusPanel = document.querySelector<HTMLDivElement>("#statusPanel")!; // element `statusPanel` is defined in index.html
 statusPanel.innerHTML = "No points yet...";
 
+//display the player's inventory
+const inventoryPanel = document.querySelector<HTMLDivElement>(
+  "#inventoryPanel",
+)!; // element `inventoryPanel` is defined in index.html
+inventoryPanel.innerHTML = " ";
+
 // Convert the classroom location to a grid cell
 const classroomCell = board.getCellForPoint(OAKES_CLASSROOM);
 const bounds = board.getCellBounds(classroomCell);
@@ -87,55 +93,74 @@ function spawnCache(i: number, j: number) {
   const rect = leaflet.rectangle(bounds);
   rect.addTo(map);
 
-  // Handle interactions with the cache
-  rect.bindPopup(() => {
-    // Each cache has a random point value, mutable by the player
-    const coinArray: Coin[] = [];
-    let pointValue = Math.floor(
-      luck([i, j, "initialValue"].toString()) * 100,
-    );
-    for (let i = 0; i < pointValue; i++) {
-      coinArray.push(generateCoins(cell, i));
-    }
+  let coinArray: Coin[] = [];
+  let pointValue = Math.floor(
+    luck([i, j, "initialValue"].toString()) * 10,
+  );
+  for (let x = 0; x < pointValue; x++) {
+    coinArray.push(generateCoins(cell, x));
+  }
 
-    // The popup offers a description and button
+  function createPopupContent() {
+    const coinList = printCoins(coinArray);
     const popupDiv = document.createElement("div");
     popupDiv.innerHTML = `
-                <div>There is a cache here at "${cell.i}, ${cell.j}". It has value <span id="value">${pointValue}</span>.</div>
-                <button id="collect">collect</button> <button id="deposit">deposit</button>`;
-
-    // Clicking the button decrements the cache's value and increments the player's points
+      <div>Cache ${i}:${j}</div>
+      Inventory:</div>
+      <div id="inventory">${coinList}</div>
+      <div>
+          <button id="collect">Collect</button>
+          <button id="deposit">Deposit</button>
+      </div>
+    `;
     popupDiv
       .querySelector<HTMLButtonElement>("#collect")!
       .addEventListener("click", () => {
-        CollectCoin(coinArray);
-        pointValue--;
-        popupDiv.querySelector<HTMLSpanElement>("#value")!.innerHTML =
-          pointValue.toString();
+        if (coinArray.length > 0) {
+          coinArray = CollectCoin(coinArray);
+          pointValue--;
+          rect.setPopupContent(createPopupContent());
+          const playerCoinList = printCoins(playerCoins);
+          inventoryPanel.innerHTML = playerCoinList;
+        }
       });
-
     popupDiv
       .querySelector<HTMLButtonElement>("#deposit")!
       .addEventListener("click", () => {
-        DepositCoin(coinArray);
-        pointValue++;
-        popupDiv.querySelector<HTMLSpanElement>("#value")!.innerHTML =
-          pointValue.toString();
+        if (playerCoins.length > 0) {
+          coinArray = DepositCoin(coinArray);
+          pointValue++;
+          rect.setPopupContent(createPopupContent());
+          const playerCoinList = printCoins(playerCoins);
+          inventoryPanel.innerHTML = playerCoinList;
+        }
       });
-
     return popupDiv;
-  });
+  }
+  rect.bindPopup(createPopupContent());
+}
+
+function printCoins(array: Coin[]) {
+  let coinList = ``;
+  for (let i = 0; i < array.length; i++) {
+    coinList += `<div>•${array[i].location.i}:${array[i].location.j}#${
+      array[i].serial
+    }<div>`;
+  }
+  return coinList;
 }
 
 function CollectCoin(coinArray: Coin[]) {
   playerPoints++;
-  playerCoins.push(coinArray.pop()!);
+  playerCoins.push(coinArray.shift()!);
   statusPanel.innerHTML = `${playerPoints} points accumulated`;
+  return coinArray;
 }
 function DepositCoin(coinArray: Coin[]) {
   playerPoints--;
-  coinArray.push(playerCoins.pop()!);
+  coinArray.push(playerCoins.shift()!);
   statusPanel.innerHTML = `${playerPoints} points accumulated`;
+  return coinArray;
 }
 
 // adding serial number identification to each coin
