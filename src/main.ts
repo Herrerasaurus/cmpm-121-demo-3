@@ -144,7 +144,7 @@ function spawnCache(i: number, j: number) {
   // Add a rectangle to the map to represent the cache
   const rect = leaflet.rectangle(bounds);
   rect.addTo(map);
-  let pointValue = Math.floor(
+  const pointValue = Math.floor(
     luck([i, j, "initialValue"].toString()) * 10,
   );
 
