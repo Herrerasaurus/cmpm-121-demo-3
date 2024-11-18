@@ -83,6 +83,22 @@ for (const cell of neighborhood) {
   }
 }
 
+//regenerate neightborhood when player moves
+function regenerateNeighborhood() {
+  // Remove all caches from the map
+  map.eachLayer((layer) => {
+    if (layer instanceof leaflet.Rectangle) {
+      map.removeLayer(layer);
+    }
+  });
+  const neighborhood = board.getCellsNearPoint(playerPosition);
+  for (const cell of neighborhood) {
+    if (luck([cell.i, cell.j].toString()) < CACHE_SPAWN_PROBABILITY) {
+      spawnCache(cell.i, cell.j);
+    }
+  }
+}
+
 // Spawn a cache at a given cell
 function spawnCache(i: number, j: number) {
   const cell = board.getCellForPoint(
@@ -189,6 +205,7 @@ function updatePlayerPosition(latDelta :number, lngDelta: number){
   );
   playerMarker.setLatLng(playerPosition);
   map.panTo(playerPosition);
+  regenerateNeighborhood();
 }
 
 //add event listeners for player movement
