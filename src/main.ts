@@ -53,6 +53,19 @@ playerMarker.addTo(map);
 console.log(OAKES_CLASSROOM);
 const playerCoins: Coin[] = [];
 
+//player movement
+let playerPosition = OAKES_CLASSROOM;
+
+function updatePlayerPosition(latDelta: number, lngDelta: number) {
+  playerPosition = new leaflet.LatLng(
+    playerPosition.lat + latDelta,
+    playerPosition.lng + lngDelta,
+  );
+  playerMarker.setLatLng(playerPosition);
+  map.panTo(playerPosition);
+  regenerateNeighborhood();
+}
+
 // Display the player's points
 let playerPoints = 0;
 const statusPanel = document.querySelector<HTMLDivElement>("#statusPanel")!; // element `statusPanel` is defined in index.html
@@ -72,17 +85,6 @@ const bounds = board.getCellBounds(classroomCell);
 const rect = leaflet.rectangle(bounds);
 rect.addTo(map);
 
-// get cells near oaks
-const neighborhood = board.getCellsNearPoint(OAKES_CLASSROOM);
-
-// for each cell in the neighborhood, spawn a cache
-for (const cell of neighborhood) {
-  //randomly spawn cache
-  if (luck([cell.i, cell.j].toString()) < CACHE_SPAWN_PROBABILITY) {
-    spawnCache(cell.i, cell.j);
-  }
-}
-
 //regenerate neightborhood when player moves
 function regenerateNeighborhood() {
   // Remove all caches from the map
@@ -98,6 +100,7 @@ function regenerateNeighborhood() {
     }
   }
 }
+regenerateNeighborhood();
 
 // Spawn a cache at a given cell
 function spawnCache(i: number, j: number) {
@@ -195,19 +198,6 @@ function generateCoins(
   };
 }
 
-//player movement
-let playerPosition = OAKES_CLASSROOM;
-
-function updatePlayerPosition(latDelta :number, lngDelta: number){
-  playerPosition = new leaflet.LatLng(
-    playerPosition.lat + latDelta,
-    playerPosition.lng + lngDelta,
-  );
-  playerMarker.setLatLng(playerPosition);
-  map.panTo(playerPosition);
-  regenerateNeighborhood();
-}
-
 //add event listeners for player movement
 document.getElementById("north")!.addEventListener("click", () => {
   updatePlayerPosition(TILE_DEGREES, 0);
@@ -221,4 +211,3 @@ document.getElementById("east")!.addEventListener("click", () => {
 document.getElementById("west")!.addEventListener("click", () => {
   updatePlayerPosition(0, -TILE_DEGREES);
 });
-
