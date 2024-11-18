@@ -178,3 +178,30 @@ function generateCoins(
     serial: serialNum,
   };
 }
+
+//player movement
+let playerPosition = OAKES_CLASSROOM;
+
+function updatePlayerPosition(latDelta :number, lngDelta: number){
+  playerPosition = new leaflet.LatLng(
+    playerPosition.lat + latDelta,
+    playerPosition.lng + lngDelta,
+  );
+  playerMarker.setLatLng(playerPosition);
+  map.panTo(playerPosition);
+}
+
+//add event listeners for player movement
+document.getElementById("north")!.addEventListener("click", () => {
+  updatePlayerPosition(TILE_DEGREES, 0);
+});
+document.getElementById("south")!.addEventListener("click", () => {
+  updatePlayerPosition(-TILE_DEGREES, 0);
+});
+document.getElementById("east")!.addEventListener("click", () => {
+  updatePlayerPosition(0, TILE_DEGREES);
+});
+document.getElementById("west")!.addEventListener("click", () => {
+  updatePlayerPosition(0, -TILE_DEGREES);
+});
+
