@@ -13,13 +13,12 @@ import luck from "./luck.ts";
 
 // board of grid cells
 import Board from "./board.ts";
-import { point } from "../node_modules/leaflet/dist/leaflet-src.js";
+
 
 const GAMEPLAY_ZOOM_LEVEL = 19;
 const TILE_DEGREES = 1e-4;
 const NEIGHBORHOOD_SIZE = 8;
 const CACHE_SPAWN_PROBABILITY = 0.1;
-const knownCells: Map<string, Cache> = new Map();
 
 //generate board
 const board = new Board(TILE_DEGREES, NEIGHBORHOOD_SIZE);
@@ -146,9 +145,9 @@ interface Coin {
   serial: number;
 }
 
-function generateCoins(cell: Cell, serialNum: number): Coin {
+function generateCoins(location: {i: number, j: number}, serialNum: number): Coin {
   return {
-    location: { i: cell.i, j: cell.j },
+    location: { i: location.i, j: location.j },
     serial: serialNum,
   };
 }
