@@ -85,6 +85,39 @@ const bounds = board.getCellBounds(classroomCell);
 const rect = leaflet.rectangle(bounds);
 rect.addTo(map);
 
+// apply momento pattern to save the state of the caches
+interface Momento<T> {
+  toMomento(): T;
+  fromMomento(momento: T): void;
+}
+
+class Geocache implements Momento<string> {
+  location: { i: number; j: number };
+  numCoins: number;
+  coins: Coin[];
+
+  constructor(i: number, j: number) {
+    this.location = { i: i, j: j };
+    this.numCoins = 0;
+    this.coins = [];
+  }
+
+  toMomento(): string {
+    return JSON.stringify({
+      numCoins: this.numCoins,
+      coins: this.coins,
+    });
+  }
+
+  fromMomento(momento: string): void {
+    const state = JSON.parse(momento);
+    this.numCoins = state.numCoins;
+    this.coins = state.coins;
+  }
+}
+
+const cacheStates = new Map<string, Geocache>();
+
 //regenerate neightborhood when player moves
 function regenerateNeighborhood() {
   // Remove all caches from the map
@@ -111,17 +144,34 @@ function spawnCache(i: number, j: number) {
   // Add a rectangle to the map to represent the cache
   const rect = leaflet.rectangle(bounds);
   rect.addTo(map);
-
-  let coinArray: Coin[] = [];
   let pointValue = Math.floor(
     luck([i, j, "initialValue"].toString()) * 10,
   );
-  for (let x = 0; x < pointValue; x++) {
-    coinArray.push(generateCoins(cell, x));
+
+  //check if cache is in cacheStates, if not add it
+  const key = `${i}:${j}`;
+  let cache: Geocache | null = null;
+  if (!cacheStates.has(key)) {
+    cacheStates.set(key, new Geocache(i, j));
+    //set cache coin value
+    cache = cacheStates.get(key) ?? null;
+    if (cache) {
+      cache.numCoins = pointValue;
+      for (let x = 0; x < pointValue; x++) {
+        cache.coins.push(generateCoins(cell, x));
+      }
+    }
+  } else {
+    console.log("Cache already exists");
+    cache = cacheStates.get(key) ?? null;
+    if (cache) {
+      const momento = cache.toMomento();
+      cache.fromMomento(momento);
+    }
   }
 
   function createPopupContent() {
-    const coinList = printCoins(coinArray);
+    const coinList = printCoins(cache?.coins ?? []);
     const popupDiv = document.createElement("div");
     popupDiv.innerHTML = `
       <div>Cache ${i}:${j}</div>
@@ -135,9 +185,8 @@ function spawnCache(i: number, j: number) {
     popupDiv
       .querySelector<HTMLButtonElement>("#collect")!
       .addEventListener("click", () => {
-        if (coinArray.length > 0) {
-          coinArray = CollectCoin(coinArray);
-          pointValue--;
+        if (cache && cache.coins.length > 0) {
+          cache.coins = CollectCoin(cache.coins);
           rect.setPopupContent(createPopupContent());
           const playerCoinList = printCoins(playerCoins);
           inventoryPanel.innerHTML = playerCoinList;
@@ -146,9 +195,8 @@ function spawnCache(i: number, j: number) {
     popupDiv
       .querySelector<HTMLButtonElement>("#deposit")!
       .addEventListener("click", () => {
-        if (playerCoins.length > 0) {
-          coinArray = DepositCoin(coinArray);
-          pointValue++;
+        if (cache && playerCoins.length > 0) {
+          cache.coins = DepositCoin(cache.coins);
           rect.setPopupContent(createPopupContent());
           const playerCoinList = printCoins(playerCoins);
           inventoryPanel.innerHTML = playerCoinList;
