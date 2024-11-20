@@ -11,7 +11,7 @@ import "./leafletWorkaround.ts";
 // Deterministic random number generator
 import luck from "./luck.ts";
 
-// board of grid cells
+// Board of grid cells
 import Board from "./board.ts";
 
 const GAMEPLAY_ZOOM_LEVEL = 19;
@@ -19,10 +19,10 @@ const TILE_DEGREES = 1e-4;
 const NEIGHBORHOOD_SIZE = 8;
 const CACHE_SPAWN_PROBABILITY = 0.1;
 
-//generate board
+// Generate board
 const board = new Board(TILE_DEGREES, NEIGHBORHOOD_SIZE);
 
-// center it on the oaks classroom location
+// Center it on the oaks classroom location
 const OAKES_LAT = 369894 * TILE_DEGREES;
 const OAKES_LNG = -1220627 * TILE_DEGREES;
 const OAKES_CLASSROOM = new leaflet.LatLng(OAKES_LAT, OAKES_LNG);
@@ -35,6 +35,75 @@ const map = leaflet.map(document.getElementById("map")!, {
   maxZoom: GAMEPLAY_ZOOM_LEVEL,
   zoomControl: false,
   scrollWheelZoom: false,
+});
+
+// Save game state with persistent data storage
+interface GameData {
+  playerPosition: leaflet.LatLng;
+  playerPoints: number;
+  playerCoins: Coin[];
+  cacheStates: Record<string, string>;
+}
+
+function saveGame() {
+  const cacheStateData: Record<string, string> = {};
+  for (const [key, cache] of cacheStates.entries()) {
+    cacheStateData[key] = cache.toMomento(); // Serialize each cache
+  }
+
+  const gameData: GameData = {
+    playerPosition: new leaflet.LatLng(playerPosition.lat, playerPosition.lng),
+    playerPoints,
+    playerCoins,
+    cacheStates: cacheStateData,
+  };
+
+  localStorage.setItem("gameState", JSON.stringify(gameData));
+  console.log("Game state saved.");
+}
+
+function loadGame() {
+  const savedState = localStorage.getItem("gameState");
+  if (!savedState) {
+    console.log("No saved game state found.");
+    return;
+  }
+
+  const gameData: GameData = JSON.parse(savedState);
+
+  // Restore cache states
+  for (const key in gameData.cacheStates) {
+    if (Object.prototype.hasOwnProperty.call(gameData.cacheStates, key)) {
+      const cacheState = gameData.cacheStates[key];
+      const cache = new Geocache(0, 0);
+      cache.fromMomento(cacheState);
+      cacheStates.set(key, cache);
+    }
+  }
+
+  // Restore player position
+  playerPosition = new leaflet.LatLng(
+    gameData.playerPosition.lat,
+    gameData.playerPosition.lng,
+  );
+  playerMarker.setLatLng(playerPosition);
+  map.panTo(playerPosition);
+
+  // Restore player points and coins
+  playerPoints = gameData.playerPoints;
+  playerCoins.length = 0;
+  playerCoins.push(...gameData.playerCoins);
+  statusPanel.innerHTML = `${playerPoints} points accumulated`;
+  inventoryPanel.innerHTML = printCoins(playerCoins);
+
+  console.log("Game state loaded.");
+}
+
+globalThis.addEventListener("beforeunload", saveGame);
+
+globalThis.addEventListener("load", () => {
+  loadGame();
+  regenerateNeighborhood();
 });
 
 // Populate the map with a background tile layer
@@ -53,7 +122,7 @@ playerMarker.addTo(map);
 console.log(OAKES_CLASSROOM);
 const playerCoins: Coin[] = [];
 
-//player movement
+// Keep track of player's position
 let playerPosition = OAKES_CLASSROOM;
 
 function updatePlayerPosition(latDelta: number, lngDelta: number) {
@@ -66,7 +135,7 @@ function updatePlayerPosition(latDelta: number, lngDelta: number) {
   regenerateNeighborhood();
 }
 
-// keep track of players geolocation
+// Keep track of players geolocation
 let trackGeolocation: number | null = null;
 const geolocationButton = document.getElementById("sensor")!;
 
@@ -74,6 +143,7 @@ function updateGeolocationPosition(lat: number, lng: number) {
   const latDelta = lat - playerPosition.lat;
   const lngDelta = lng - playerPosition.lng;
   updatePlayerPosition(latDelta, lngDelta);
+  map.panTo(playerPosition);
 }
 
 function geolocationTracking() {
@@ -105,10 +175,10 @@ let playerPoints = 0;
 const statusPanel = document.querySelector<HTMLDivElement>("#statusPanel")!; // element `statusPanel` is defined in index.html
 statusPanel.innerHTML = "No points yet...";
 
-//display the player's inventory
+// Display the player's inventory
 const inventoryPanel = document.querySelector<HTMLDivElement>(
   "#inventoryPanel",
-)!; // element `inventoryPanel` is defined in index.html
+)!;
 inventoryPanel.innerHTML = " ";
 
 // Convert the classroom location to a grid cell
@@ -119,7 +189,7 @@ const bounds = board.getCellBounds(classroomCell);
 const rect = leaflet.rectangle(bounds);
 rect.addTo(map);
 
-// apply momento pattern to save the state of the caches
+// Apply momento pattern to save the state of the caches
 interface Momento<T> {
   toMomento(): T;
   fromMomento(momento: T): void;
@@ -152,7 +222,7 @@ class Geocache implements Momento<string> {
 
 const cacheStates = new Map<string, Geocache>();
 
-//regenerate neightborhood when player moves
+// Regenerate neightborhood when player moves
 function regenerateNeighborhood() {
   // Remove all caches from the map
   map.eachLayer((layer) => {
@@ -160,6 +230,7 @@ function regenerateNeighborhood() {
       map.removeLayer(layer);
     }
   });
+
   const neighborhood = board.getCellsNearPoint(playerPosition);
   for (const cell of neighborhood) {
     if (luck([cell.i, cell.j].toString()) < CACHE_SPAWN_PROBABILITY) {
@@ -182,12 +253,12 @@ function spawnCache(i: number, j: number) {
     luck([i, j, "initialValue"].toString()) * 10,
   );
 
-  //check if cache is in cacheStates, if not add it
+  // Check if cache is in cacheStates, if not add it
   const key = `${i}:${j}`;
   let cache: Geocache | null = null;
   if (!cacheStates.has(key)) {
     cacheStates.set(key, new Geocache(i, j));
-    //set cache coin value
+    // Set cache coin value
     cache = cacheStates.get(key) ?? null;
     if (cache) {
       cache.numCoins = pointValue;
@@ -196,7 +267,6 @@ function spawnCache(i: number, j: number) {
       }
     }
   } else {
-    console.log("Cache already exists");
     cache = cacheStates.get(key) ?? null;
     if (cache) {
       const momento = cache.toMomento();
@@ -264,7 +334,7 @@ function DepositCoin(coinArray: Coin[]) {
   return coinArray;
 }
 
-// adding serial number identification to each coin
+// Adding serial number identification to each coin
 interface Coin {
   location: { i: number; j: number };
   serial: number;
@@ -280,7 +350,7 @@ function generateCoins(
   };
 }
 
-//add event listeners for player movement
+// Add event listeners for player movement
 document.getElementById("north")!.addEventListener("click", () => {
   updatePlayerPosition(TILE_DEGREES, 0);
 });
