@@ -1,5 +1,5 @@
 // @deno-types="npm:@types/leaflet@^1.9.14"
-import leaflet, { polyline } from "leaflet";
+import leaflet from "leaflet";
 
 // Style sheets
 import "leaflet/dist/leaflet.css";
@@ -94,7 +94,7 @@ function loadGame() {
   // Restore player movement history
   playerMovementHistory.length = 0;
   playerMovementHistory.push(...gameData.playerMovementHistory);
-  const playerPolyline = leaflet.polyline(playerMovementHistory, {
+  const _playerPolyline = leaflet.polyline(playerMovementHistory, {
     color: "blue",
   }).addTo(map);
   console.log(playerMovementHistory);
@@ -114,6 +114,44 @@ globalThis.addEventListener("beforeunload", saveGame);
 globalThis.addEventListener("load", () => {
   loadGame();
   regenerateNeighborhood();
+});
+
+// Reset game state
+function resetGame() {
+  const confirmReset = confirm("Are you sure you want to reset the game?");
+  if (!confirmReset) {
+    return;
+  }
+
+  // Clear local storage
+  localStorage.removeItem("gameState");
+  //location.reload();
+
+  // Reset in-memory state
+  playerPosition = OAKES_CLASSROOM;
+  playerMarker.setLatLng(playerPosition);
+  map.panTo(playerPosition);
+
+  playerPoints = 0;
+  playerCoins.length = 0;
+  cacheStates.clear();
+  playerMovementHistory.length = 0;
+
+  // Reset UI
+  statusPanel.innerHTML = "No points yet...";
+  inventoryPanel.innerHTML = " ";
+  map.eachLayer((layer) => {
+    if (layer instanceof leaflet.Polyline) {
+      map.removeLayer(layer);
+    }
+  });
+  regenerateNeighborhood();
+
+  console.log("Game state reset.");
+}
+
+document.getElementById("reset")!.addEventListener("click", () => {
+  resetGame();
 });
 
 // Player movement history
@@ -150,7 +188,7 @@ function updatePlayerPosition(latDelta: number, lngDelta: number) {
 
   // Update player movement history
   playerMovementHistory.push(playerPosition);
-  const polyline = leaflet.polyline(playerMovementHistory, { color: "blue" })
+  const _polyline = leaflet.polyline(playerMovementHistory, { color: "blue" })
     .addTo(map);
   regenerateNeighborhood();
 }
