@@ -104,7 +104,7 @@ function loadGame() {
   playerCoins.length = 0;
   playerCoins.push(...gameData.playerCoins);
   statusPanel.innerHTML = `${playerPoints} points accumulated`;
-  inventoryPanel.innerHTML = printCoins(playerCoins);
+  inventoryPanel.innerHTML = printCoins(playerCoins, true);
 
   console.log("Game state loaded.");
 }
@@ -350,7 +350,7 @@ function spawnCache(i: number, j: number) {
         if (cache && cache.coins.length > 0) {
           cache.coins = CollectCoin(cache.coins);
           rect.setPopupContent(createPopupContent());
-          const playerCoinList = printCoins(playerCoins);
+          const playerCoinList = printCoins(playerCoins, true);
           inventoryPanel.innerHTML = playerCoinList;
         }
       });
@@ -360,7 +360,7 @@ function spawnCache(i: number, j: number) {
         if (cache && playerCoins.length > 0) {
           cache.coins = DepositCoin(cache.coins);
           rect.setPopupContent(createPopupContent());
-          const playerCoinList = printCoins(playerCoins);
+          const playerCoinList = printCoins(playerCoins, true);
           inventoryPanel.innerHTML = playerCoinList;
         }
       });
@@ -369,15 +369,44 @@ function spawnCache(i: number, j: number) {
   rect.bindPopup(createPopupContent());
 }
 
-function printCoins(array: Coin[]) {
+function printCoins(array: Coin[], playerInventory: boolean = false) {
   let coinList = ``;
   for (let i = 0; i < array.length; i++) {
-    coinList += `<div>•${array[i].location.i}:${array[i].location.j}#${
-      array[i].serial
-    }<div>`;
+    if (!playerInventory) {
+      coinList += `<div>•${array[i].location.i}:${array[i].location.j}#${
+        array[i].serial
+      }<div>`;
+    } else {
+      coinList += `
+      <div>
+        • ${array[i].location.i}:${array[i].location.j}#${array[i].serial}
+        <button id="center-${i}" class="center-coin-btn">Find Cache</button>
+      </div>
+    `;
+    }
   }
   return coinList;
 }
+
+// Center the map on a coin
+inventoryPanel.addEventListener("click", (event) => {
+  const target = event.target as HTMLElement;
+  if (target.classList.contains("center-coin-btn")) {
+    const index = parseInt(target.id.split("-")[1]);
+    const coin = playerCoins[index];
+    const center = new leaflet.LatLng(
+      coin.location.i * TILE_DEGREES,
+      coin.location.j * TILE_DEGREES,
+    );
+    map.panTo(center);
+
+    // Add rect around cache
+    const cell = board.getCellForPoint(center);
+    const bounds = board.getCellBounds(cell);
+    const rect = leaflet.rectangle(bounds);
+    rect.addTo(map);
+  }
+});
 
 function CollectCoin(coinArray: Coin[]) {
   playerPoints++;
