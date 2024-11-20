@@ -1,5 +1,5 @@
 // @deno-types="npm:@types/leaflet@^1.9.14"
-import leaflet from "leaflet";
+import leaflet, { polyline } from "leaflet";
 
 // Style sheets
 import "leaflet/dist/leaflet.css";
@@ -43,6 +43,7 @@ interface GameData {
   playerPoints: number;
   playerCoins: Coin[];
   cacheStates: Record<string, string>;
+  playerMovementHistory: leaflet.LatLng[];
 }
 
 function saveGame() {
@@ -56,6 +57,7 @@ function saveGame() {
     playerPoints,
     playerCoins,
     cacheStates: cacheStateData,
+    playerMovementHistory,
   };
 
   localStorage.setItem("gameState", JSON.stringify(gameData));
@@ -89,6 +91,14 @@ function loadGame() {
   playerMarker.setLatLng(playerPosition);
   map.panTo(playerPosition);
 
+  // Restore player movement history
+  playerMovementHistory.length = 0;
+  playerMovementHistory.push(...gameData.playerMovementHistory);
+  const playerPolyline = leaflet.polyline(playerMovementHistory, {
+    color: "blue",
+  }).addTo(map);
+  console.log(playerMovementHistory);
+
   // Restore player points and coins
   playerPoints = gameData.playerPoints;
   playerCoins.length = 0;
@@ -105,6 +115,9 @@ globalThis.addEventListener("load", () => {
   loadGame();
   regenerateNeighborhood();
 });
+
+// Player movement history
+const playerMovementHistory: leaflet.LatLng[] = [];
 
 // Populate the map with a background tile layer
 leaflet
@@ -130,8 +143,15 @@ function updatePlayerPosition(latDelta: number, lngDelta: number) {
     playerPosition.lat + latDelta,
     playerPosition.lng + lngDelta,
   );
+
+  // Move player marker and update map view
   playerMarker.setLatLng(playerPosition);
   map.panTo(playerPosition);
+
+  // Update player movement history
+  playerMovementHistory.push(playerPosition);
+  const polyline = leaflet.polyline(playerMovementHistory, { color: "blue" })
+    .addTo(map);
   regenerateNeighborhood();
 }
 
