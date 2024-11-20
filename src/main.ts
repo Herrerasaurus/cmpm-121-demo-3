@@ -66,6 +66,40 @@ function updatePlayerPosition(latDelta: number, lngDelta: number) {
   regenerateNeighborhood();
 }
 
+// keep track of players geolocation
+let trackGeolocation: number | null = null;
+const geolocationButton = document.getElementById("sensor")!;
+
+function updateGeolocationPosition(lat: number, lng: number) {
+  const latDelta = lat - playerPosition.lat;
+  const lngDelta = lng - playerPosition.lng;
+  updatePlayerPosition(latDelta, lngDelta);
+}
+
+function geolocationTracking() {
+  trackGeolocation = navigator.geolocation.watchPosition(
+    (position) => {
+      const { latitude, longitude } = position.coords;
+      updateGeolocationPosition(latitude, longitude);
+    },
+    (error) => {
+      console.error("Error watching geolocation:", error);
+      alert("Please check your permissions");
+    },
+    {
+      enableHighAccuracy: true,
+      maximumAge: 10000,
+      timeout: 5000,
+    },
+  );
+}
+
+geolocationButton.addEventListener("click", () => {
+  if (trackGeolocation === null) {
+    geolocationTracking();
+  }
+});
+
 // Display the player's points
 let playerPoints = 0;
 const statusPanel = document.querySelector<HTMLDivElement>("#statusPanel")!; // element `statusPanel` is defined in index.html
