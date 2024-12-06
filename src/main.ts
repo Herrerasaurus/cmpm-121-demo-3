@@ -311,11 +311,21 @@ function spawnCache(i: number, j: number) {
     luck([i, j, "initialValue"].toString()) * 10,
   );
 
+  const cache = initializeCache(cell, cacheStates, pointValue);
+  rect.bindPopup(createPopupContent(cache, rect, i, j));
+}
+
+// Helper function - Initialize cache
+function initializeCache(
+  cell: { i: number; j: number },
+  cacheStates: Map<string, Geocache>,
+  pointValue: number,
+): Geocache | null {
   // Check if cache is in cacheStates, if not add it
-  const key = `${i}:${j}`;
+  const key = `${cell.i}:${cell.j}`;
   let cache: Geocache | null = null;
   if (!cacheStates.has(key)) {
-    cacheStates.set(key, new Geocache(i, j));
+    cacheStates.set(key, new Geocache(cell.i, cell.j));
     // Set cache coin value
     cache = cacheStates.get(key) ?? null;
     if (cache) {
@@ -331,42 +341,48 @@ function spawnCache(i: number, j: number) {
       cache.fromMomento(momento);
     }
   }
+  return cache;
+}
 
-  function createPopupContent() {
-    const coinList = printCoins(cache?.coins ?? []);
-    const popupDiv = document.createElement("div");
-    popupDiv.innerHTML = `
-      <div>Cache ${i}:${j}</div>
-      Inventory:</div>
-      <div id="inventory">${coinList}</div>
-      <div>
-          <button id="collect">Collect</button>
-          <button id="deposit">Deposit</button>
-      </div>
-    `;
-    popupDiv
-      .querySelector<HTMLButtonElement>("#collect")!
-      .addEventListener("click", () => {
-        if (cache && cache.coins.length > 0) {
-          cache.coins = CollectCoin(cache.coins);
-          rect.setPopupContent(createPopupContent());
-          const playerCoinList = printCoins(playerCoins, true);
-          inventoryPanel.innerHTML = playerCoinList;
-        }
-      });
-    popupDiv
-      .querySelector<HTMLButtonElement>("#deposit")!
-      .addEventListener("click", () => {
-        if (cache && playerCoins.length > 0) {
-          cache.coins = DepositCoin(cache.coins);
-          rect.setPopupContent(createPopupContent());
-          const playerCoinList = printCoins(playerCoins, true);
-          inventoryPanel.innerHTML = playerCoinList;
-        }
-      });
-    return popupDiv;
-  }
-  rect.bindPopup(createPopupContent());
+// Helper function - Create popup content for each cache
+function createPopupContent(
+  cache: Geocache | null,
+  rect: leaflet.Rectangle,
+  i: number,
+  j: number,
+) {
+  const coinList = printCoins(cache?.coins ?? []);
+  const popupDiv = document.createElement("div");
+  popupDiv.innerHTML = `
+    <div>Cache ${i}:${j}</div>
+    Inventory:</div>
+    <div id="inventory">${coinList}</div>
+    <div>
+        <button id="collect">Collect</button>
+        <button id="deposit">Deposit</button>
+    </div>
+  `;
+  popupDiv
+    .querySelector<HTMLButtonElement>("#collect")!
+    .addEventListener("click", () => {
+      if (cache && cache.coins.length > 0) {
+        cache.coins = CollectCoin(cache.coins);
+        rect.setPopupContent(createPopupContent(cache, rect, i, j));
+        const playerCoinList = printCoins(playerCoins, true);
+        inventoryPanel.innerHTML = playerCoinList;
+      }
+    });
+  popupDiv
+    .querySelector<HTMLButtonElement>("#deposit")!
+    .addEventListener("click", () => {
+      if (cache && playerCoins.length > 0) {
+        cache.coins = DepositCoin(cache.coins);
+        rect.setPopupContent(createPopupContent(cache, rect, i, j));
+        const playerCoinList = printCoins(playerCoins, true);
+        inventoryPanel.innerHTML = playerCoinList;
+      }
+    });
+  return popupDiv;
 }
 
 function printCoins(array: Coin[], playerInventory: boolean = false) {
@@ -450,3 +466,38 @@ document.getElementById("east")!.addEventListener("click", () => {
 document.getElementById("west")!.addEventListener("click", () => {
   updatePlayerPosition(0, -TILE_DEGREES);
 });
+/*
+function createPopupContent(i: number, j: number, cache: Geocache | null) {
+    const coinList = printCoins(cache?.coins ?? []);
+    const popupDiv = document.createElement("div");
+    popupDiv.innerHTML = `
+      <div>Cache ${i}:${j}</div>
+      Inventory:</div>
+      <div id="inventory">${coinList}</div>
+      <div>
+          <button id="collect">Collect</button>
+          <button id="deposit">Deposit</button>
+      </div>
+    `;
+    popupDiv
+      .querySelector<HTMLButtonElement>("#collect")!
+      .addEventListener("click", () => {
+        if (cache && cache.coins.length > 0) {
+          cache.coins = CollectCoin(cache.coins);
+          rect.setPopupContent(createPopupContent(i, j, cache));
+          const playerCoinList = printCoins(playerCoins, true);
+          inventoryPanel.innerHTML = playerCoinList;
+        }
+      });
+    popupDiv
+      .querySelector<HTMLButtonElement>("#deposit")!
+      .addEventListener("click", () => {
+        if (cache && playerCoins.length > 0) {
+          cache.coins = DepositCoin(cache.coins);
+          rect.setPopupContent(createPopupContent(i, j, cache));
+          const playerCoinList = printCoins(playerCoins, true);
+          inventoryPanel.innerHTML = playerCoinList;
+        }
+      });
+    return popupDiv;
+  }*/
